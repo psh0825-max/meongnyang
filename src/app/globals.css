@@ -639,6 +639,98 @@ body {
    ═══════════════════════════════════════════ */
 ::-webkit-scrollbar { width: 0; }
 
+/* ═══════════════════════════════════════════
+   PHOTO SWIPE (scroll-snap)
+   ═══════════════════════════════════════════ */
+.photo-swipe-container {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.photo-swipe-container::-webkit-scrollbar { display: none; }
+.photo-swipe-slide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+}
+
+/* ═══════════════════════════════════════════
+   SEARCH BAR
+   ═══════════════════════════════════════════ */
+.search-bar {
+  display: flex; align-items: center; gap: 10px;
+  background: white; border-radius: 16px;
+  padding: 10px 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1.5px solid rgba(0,0,0,0.04);
+  transition: all 0.3s;
+}
+.search-bar:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.1);
+}
+.search-bar input {
+  flex: 1; border: none; outline: none; background: none;
+  font-size: 14px; color: var(--text); font-weight: 500;
+}
+.search-bar input::placeholder { color: var(--text-light); }
+
+.filter-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 6px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 700;
+  background: white; color: var(--text-mid);
+  border: 1.5px solid rgba(0,0,0,0.06);
+  cursor: pointer; transition: all 0.2s;
+  white-space: nowrap;
+}
+.filter-chip:hover { border-color: var(--primary-light); }
+.filter-chip.active {
+  background: linear-gradient(135deg, var(--primary), #F97316);
+  color: white; border-color: transparent;
+  box-shadow: 0 2px 8px rgba(245,158,11,0.25);
+}
+
+/* ═══════════════════════════════════════════
+   GRADIENT AVATAR (default)
+   ═══════════════════════════════════════════ */
+.gradient-avatar {
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+  background-size: 200% 200%;
+  animation: gradientShift 4s ease infinite;
+  color: white; font-weight: 900;
+  box-shadow: 0 4px 16px rgba(245,158,11,0.2);
+  border: 3px solid white;
+}
+
+/* ═══════════════════════════════════════════
+   LAZY IMAGE
+   ═══════════════════════════════════════════ */
+.lazy-img {
+  opacity: 0;
+  filter: blur(10px);
+  transition: opacity 0.4s ease, filter 0.4s ease;
+  background: linear-gradient(135deg, var(--warm) 0%, #f0ebe4 100%);
+}
+.lazy-img.loaded {
+  opacity: 1;
+  filter: blur(0);
+}
+
+/* ═══════════════════════════════════════════
+   EMOTION STATS CARD
+   ═══════════════════════════════════════════ */
+.emotion-card {
+  background: white;
+  border-radius: 20px;
+  padding: 18px 20px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(0,0,0,0.03);
+}
+
 .gradient-text {
   background: linear-gradient(135deg, var(--primary-dark), var(--secondary));
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;

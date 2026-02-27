@@ -1,11 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { getAllDiaries, deleteDiary, getPetProfile, type DiaryEntry } from '@/lib/db';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { getAllDiaries, deleteDiary, getPetProfile, getWeeklyDiaries, getMoodTrend, type DiaryEntry } from '@/lib/db';
 
 const moodMap: Record<string, string> = {
   '#해피': 'mood-happy', '#졸림': 'mood-sleepy', '#배고픔': 'mood-hungry',
   '#신남': 'mood-excited', '#편안': 'mood-relaxed',
+};
+
+const moodEmojis: Record<string, string> = {
+  '#해피': '😊', '#졸림': '😴', '#배고픔': '🍖', '#신남': '🎉',
+  '#편안': '☺️', '#궁금': '🧐', '#외로움': '🥺', '#장난꾸러기': '😝',
 };
 
 const getGreeting = () => {
@@ -34,10 +40,67 @@ const getStreakDays = (diaries: DiaryEntry[]) => {
   return streak;
 };
 
+const formatTime = (dateStr: string) => {
+  return new Date(dateStr).toLocaleTimeString('ko-KR', {
+    hour: 'numeric', minute: '2-digit', hour12: true,
+  });
+};
+
+// Lazy image component
+function LazyImage({ src, alt, className, style }: {
+  src: string; alt: string; className?: string;
+  style?: React.CSSProperties;
+}) {
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const el = imgRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.src = src;
+          obs.disconnect();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [src]);
+
+  return (
+    <img
+      ref={imgRef}
+      alt={alt}
+      className={`lazy-img ${loaded ? 'loaded' : ''} ${className || ''}`}
+      style={style}
+      onLoad={() => setLoaded(true)}
+    />
+  );
+}
+
+// Gradient avatar component
+function GradientAvatar({ name, size = 56 }: { name: string; size?: number }) {
+  const letter = name ? name.charAt(0).toUpperCase() : '?';
+  return (
+    <div className="gradient-avatar" style={{
+      width: size, height: size, fontSize: size * 0.4,
+    }}>
+      {letter}
+    </div>
+  );
+}
+
 export default function HomePage() {
+  const router = useRouter();
   const [diaries, setDiaries] = useState<DiaryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSplash, setShowSplash] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterPet, setFilterPet] = useState('');
+  const [filterMood, setFilterMood] = useState('');
 
   const greeting = getGreeting();
 
@@ -50,7 +113,8 @@ export default function HomePage() {
     getAllDiaries().then((d) => { setDiaries(d); setLoading(false); });
   }, []);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
     if (!confirm('이 일기를 삭제할까요?')) return;
     await deleteDiary(id);
     setDiaries((prev) => prev.filter((d) => d.id !== id));
@@ -59,6 +123,27 @@ export default function HomePage() {
   const streak = getStreakDays(diaries);
   const uniquePets = [...new Set(diaries.map(d => d.petName))].filter(Boolean);
   const petProfile = getPetProfile();
+
+  // Weekly emotion stats
+  const weeklyDiaries = getWeeklyDiaries(diaries);
+  const weeklyMoods = getMoodTrend(weeklyDiaries);
+  const sortedWeeklyMoods = Object.entries(weeklyMoods).sort((a, b) => b[1] - a[1]);
+  const topMood = sortedWeeklyMoods.length > 0 ? sortedWeeklyMoods[0] : null;
+  const maxMoodCount = topMood ? topMood[1] : 0;
+
+  // All mood tags for filter
+  const allMoodTags = [...new Set(diaries.flatMap(d => d.moodTags))];
+
+  // Filter diaries
+  const filteredDiaries = diaries.filter(d => {
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      if (!d.diary.toLowerCase().includes(q) && !d.petName.toLowerCase().includes(q)) return false;
+    }
+    if (filterPet && d.petName !== filterPet) return false;
+    if (filterMood && !d.moodTags.includes(filterMood)) return false;
+    return true;
+  });
 
   return (
     <>
@@ -86,6 +171,8 @@ export default function HomePage() {
                 width: 56, height: 56, borderRadius: '50%', objectFit: 'cover',
                 boxShadow: '0 4px 16px rgba(0,0,0,0.1)', border: '3px solid white',
               }} />
+            ) : petProfile.name ? (
+              <GradientAvatar name={petProfile.name} size={56} />
             ) : diaries.length > 0 ? (
               <div className="avatar-stack">
                 {diaries.slice(0, 3).map((d) => (
@@ -145,29 +232,118 @@ export default function HomePage() {
           </div>
         ) : (
           <>
+            {/* Weekly emotion stats card */}
+            {sortedWeeklyMoods.length > 0 && (
+              <div className="emotion-card animate-fade-in" style={{ marginTop: 20 }}>
+                <div className="flex items-center justify-between" style={{ marginBottom: 14 }}>
+                  <div className="flex items-center gap-2">
+                    <span style={{ fontSize: 16 }}>💕</span>
+                    <span style={{ fontSize: 14, fontWeight: 800 }}>이번 주 감정</span>
+                  </div>
+                  <span className="badge badge-pink">{weeklyDiaries.length}개 일기</span>
+                </div>
+                {topMood && (
+                  <div className="flex items-center gap-3" style={{ marginBottom: 14 }}>
+                    <span style={{ fontSize: 32 }}>{moodEmojis[topMood[0]] || '🏷️'}</span>
+                    <div>
+                      <p style={{ fontSize: 15, fontWeight: 800 }}>가장 많은 감정: {topMood[0]}</p>
+                      <p style={{ fontSize: 12, color: 'var(--text-light)' }}>{topMood[1]}회 기록됨</p>
+                    </div>
+                  </div>
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {sortedWeeklyMoods.slice(0, 4).map(([tag, count]) => (
+                    <div key={tag} className="flex items-center gap-2">
+                      <span style={{ fontSize: 14, width: 22, textAlign: 'center' }}>{moodEmojis[tag] || '🏷️'}</span>
+                      <span style={{ fontSize: 12, fontWeight: 600, width: 60, flexShrink: 0 }}>{tag}</span>
+                      <div style={{ flex: 1, height: 6, background: 'var(--warm)', borderRadius: 3, overflow: 'hidden' }}>
+                        <div style={{
+                          width: `${(count / maxMoodCount) * 100}%`, height: '100%', borderRadius: 3,
+                          background: 'linear-gradient(90deg, var(--primary), var(--secondary))',
+                        }} />
+                      </div>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-light)', width: 20, textAlign: 'right' }}>{count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Search & Filter */}
+            <div style={{ marginTop: 20 }}>
+              <div className="search-bar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-light)" strokeWidth="2" strokeLinecap="round">
+                  <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                </svg>
+                <input
+                  type="text"
+                  placeholder="일기 검색..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <button onClick={() => setSearchQuery('')} style={{
+                    background: 'none', border: 'none', color: 'var(--text-light)',
+                    cursor: 'pointer', fontSize: 16, padding: 0,
+                  }}>×</button>
+                )}
+              </div>
+
+              {/* Filter chips */}
+              {(uniquePets.length > 1 || allMoodTags.length > 0) && (
+                <div style={{ display: 'flex', gap: 6, marginTop: 10, overflowX: 'auto', paddingBottom: 4 }}>
+                  {uniquePets.length > 1 && uniquePets.map(pet => (
+                    <button key={pet} onClick={() => setFilterPet(filterPet === pet ? '' : pet)}
+                      className={`filter-chip ${filterPet === pet ? 'active' : ''}`}>
+                      {pet}
+                    </button>
+                  ))}
+                  {allMoodTags.map(tag => (
+                    <button key={tag} onClick={() => setFilterMood(filterMood === tag ? '' : tag)}
+                      className={`filter-chip ${filterMood === tag ? 'active' : ''}`}>
+                      {moodEmojis[tag] || ''} {tag}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="flex items-center justify-between" style={{ marginTop: 20, marginBottom: 16 }}>
               <div className="flex items-center gap-2">
                 <span style={{ fontSize: 18 }}>📖</span>
                 <h2 style={{ fontSize: 17, fontWeight: 800 }}>최근 일기</h2>
               </div>
-              <span className="badge badge-pink">{diaries.length}개</span>
+              <span className="badge badge-pink">{filteredDiaries.length}개</span>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-              {diaries.map((entry, i) => (
-                <div key={entry.id} className="diary-card animate-fade-in" style={{ animationDelay: `${i * 0.08}s` }}>
+              {filteredDiaries.map((entry, i) => (
+                <div key={entry.id} className="diary-card animate-fade-in"
+                  style={{ animationDelay: `${i * 0.08}s`, cursor: 'pointer' }}
+                  onClick={() => router.push(`/diary/${entry.id}`)}>
                   <div className="photo-container">
-                    <img src={entry.imageData} alt={entry.petName} />
+                    <LazyImage src={entry.imageData} alt={entry.petName} />
                     <div className="photo-date">
                       {new Date(entry.createdAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', weekday: 'short' })}
+                      {' · '}
+                      {formatTime(entry.createdAt)}
                     </div>
                     <div className="photo-pet">
                       {entry.petType === 'cat' ? '🐱' : entry.petType === 'dog' ? '🐶' : '🐾'} {entry.petName}
                     </div>
+                    {entry.extraImages && entry.extraImages.length > 0 && (
+                      <div style={{
+                        position: 'absolute', bottom: 12, right: 12,
+                        background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)',
+                        color: 'white', padding: '4px 10px', borderRadius: 10,
+                        fontSize: 11, fontWeight: 700,
+                      }}>
+                        +{entry.extraImages.length}장
+                      </div>
+                    )}
                   </div>
 
                   <div style={{ padding: '18px 20px 20px' }}>
-                    {/* Health alert */}
                     {entry.healthAlerts && entry.healthAlerts.length > 0 && (
                       <div style={{
                         marginBottom: 14, padding: '10px 14px', borderRadius: 14,
@@ -182,7 +358,10 @@ export default function HomePage() {
                     )}
 
                     <div className="diary-content-box">
-                      <p className="diary-text" style={{ whiteSpace: 'pre-wrap' }}>{entry.diary}</p>
+                      <p className="diary-text" style={{ whiteSpace: 'pre-wrap',
+                        display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                      }}>{entry.diary}</p>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
@@ -191,7 +370,7 @@ export default function HomePage() {
                           <span key={tag} className={`mood-tag ${moodMap[tag] || ''}`}>{tag}</span>
                         ))}
                       </div>
-                      <button onClick={() => handleDelete(entry.id)} className="delete-btn" aria-label="삭제">
+                      <button onClick={(e) => handleDelete(e, entry.id)} className="delete-btn" aria-label="삭제">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                           <polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
                         </svg>

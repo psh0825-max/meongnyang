@@ -114,6 +114,12 @@ export default function ProfilePage() {
               <img src={photo} alt={name} style={{
                 width: 88, height: 88, borderRadius: '50%', objectFit: 'cover',
               }} />
+            ) : name ? (
+              <div className="avatar-inner" style={{
+                background: 'linear-gradient(135deg, var(--primary), var(--secondary), var(--accent))',
+                backgroundSize: '200% 200%', animation: 'gradientShift 4s ease infinite',
+                color: 'white', fontWeight: 900, fontSize: 36,
+              }}>{name.charAt(0).toUpperCase()}</div>
             ) : (
               <div className="avatar-inner animate-breathe">{selected.emoji}</div>
             )}

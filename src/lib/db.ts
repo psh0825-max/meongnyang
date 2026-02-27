@@ -57,6 +57,18 @@ export async function getAllDiaries(): Promise<DiaryEntry[]> {
   return all.reverse();
 }
 
+export async function getDiaryById(id: string): Promise<DiaryEntry | undefined> {
+  const db = await getDB();
+  return db.get('diaries', id);
+}
+
+export async function updateDiary(id: string, updates: Partial<DiaryEntry>): Promise<void> {
+  const db = await getDB();
+  const existing = await db.get('diaries', id);
+  if (!existing) return;
+  await db.put('diaries', { ...existing, ...updates });
+}
+
 export async function deleteDiary(id: string): Promise<void> {
   const db = await getDB();
   await db.delete('diaries', id);
