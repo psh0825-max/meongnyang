@@ -292,7 +292,7 @@ body {
   position: relative; overflow: hidden;
 }
 .photo-container img {
-  width: 100%; height: 240px; object-fit: cover;
+  width: 100%; max-height: 360px; object-fit: cover;
   transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .diary-card:hover .photo-container img { transform: scale(1.04); }

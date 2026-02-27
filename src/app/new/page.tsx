@@ -134,7 +134,7 @@ export default function NewDiaryPage() {
             /* Photo selected */
             <div className="diary-card animate-scale-in" style={{ marginTop: 8 }}>
               <div className="photo-container">
-                <img src={preview} alt="" style={{ height: 260 }} />
+                <img src={preview} alt="" style={{ maxHeight: 360 }} />
                 <div className="photo-date">
                   {new Date().toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', weekday: 'short' })}
                 </div>
