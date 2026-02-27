@@ -92,11 +92,7 @@ export default function NewDiaryPage() {
             <div className="animate-fade-in">
               {/* Upload zone */}
               <div className="upload-zone" onClick={() => fileRef.current?.click()}>
-                <div className="upload-icon">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
-                  </svg>
-                </div>
+                <img src="/illust-hero.png" alt="" style={{ width: 120, height: 120, borderRadius: 24, margin: '0 auto 16px', objectFit: 'cover' }} />
                 <p style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>사진을 올려주세요</p>
                 <p style={{ fontSize: 13, color: 'var(--text-light)', lineHeight: 1.5 }}>
                   우리 아이의 오늘 모습을 기록해요 ✨
@@ -169,7 +165,9 @@ export default function NewDiaryPage() {
           {/* Generating state */}
           {generating && (
             <div className="card animate-fade-in" style={{ padding: '44px 24px', textAlign: 'center' }}>
-              <div className="animate-float" style={{ fontSize: 40, marginBottom: 16 }}>🐾</div>
+              <div className="animate-float" style={{ marginBottom: 16 }}>
+                <img src="/illust-loading.png" alt="" style={{ width: 140, height: 140, borderRadius: 24, margin: '0 auto', objectFit: 'cover' }} />
+              </div>
               <div className="flex justify-center gap-2" style={{ marginBottom: 16 }}>
                 {[0, 1, 2].map(i => <div key={i} className="loading-dot" style={{ animationDelay: `${i * 0.2}s` }} />)}
               </div>

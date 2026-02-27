@@ -85,6 +85,7 @@ export default function HomePage() {
           ))}
         </div>
         <div className="splash-logo text-center">
+          <img src="/illust-icon.png" alt="" style={{ width: 100, height: 100, borderRadius: 28, margin: '0 auto 16px', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }} />
           <h1 className="gradient-text" style={{ fontSize: 32, fontWeight: 900, letterSpacing: '-0.03em' }}>멍냥로그</h1>
         </div>
         <p className="splash-tagline" style={{ fontSize: 14, color: '#8A8580', marginTop: 10 }}>
@@ -147,8 +148,8 @@ export default function HomePage() {
           </div>
         ) : diaries.length === 0 ? (
           <div className="empty-state animate-fade-in" style={{ paddingTop: 32 }}>
-            <div className="empty-visual animate-float">
-              <span style={{ fontSize: 56 }}>🐾</span>
+            <div className="animate-float" style={{ marginBottom: 24 }}>
+              <img src="/illust-empty.png" alt="" style={{ width: 180, height: 180, borderRadius: 32, margin: '0 auto', objectFit: 'cover' }} />
             </div>
             <h3 className="gradient-text" style={{ fontSize: 22, fontWeight: 900, marginBottom: 10 }}>
               아직 일기가 없어요
