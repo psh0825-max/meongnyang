@@ -13,14 +13,15 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
+  userScalable: false,
   themeColor: '#F59E0B',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ko">
-      <body className="min-h-screen bg-cream">
-        <div className="max-w-md mx-auto min-h-screen pb-20 relative">
+      <body>
+        <div className="app-shell">
           {children}
         </div>
         <BottomNav />

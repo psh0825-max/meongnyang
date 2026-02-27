@@ -286,16 +286,33 @@ body {
 }
 
 /* ═══════════════════════════════════════════
+   APP SHELL
+   ═══════════════════════════════════════════ */
+.app-shell {
+  max-width: 448px; /* md */
+  margin: 0 auto;
+  min-height: 100dvh;
+  padding-bottom: 80px;
+  position: relative;
+  background: var(--cream);
+  box-shadow: 0 0 60px rgba(0,0,0,0.04);
+}
+@media (min-width: 450px) {
+  body { background: #f0ebe4; }
+}
+
+/* ═══════════════════════════════════════════
    PHOTOS
    ═══════════════════════════════════════════ */
 .photo-container {
   position: relative; overflow: hidden;
+  background: linear-gradient(135deg, #f8f5f0, #fff0e1);
 }
 .photo-container img {
-  width: 100%; object-fit: contain; background: #f8f5f0;
+  width: 100%; display: block;
   transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.diary-card:hover .photo-container img { transform: scale(1.04); }
+.diary-card:hover .photo-container img { transform: scale(1.02); }
 
 .photo-date {
   position: absolute; bottom: 12px; left: 12px;
