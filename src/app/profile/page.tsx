@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getPetProfile, savePetProfile, getAllDiaries, getMoodTrend, getWeeklyDiaries, type DiaryEntry } from '@/lib/db';
 
 const petTypes = [
@@ -36,11 +36,36 @@ export default function ProfilePage() {
   const [birthday, setBirthday] = useState('');
   const [personality, setPersonality] = useState('');
   const [gender, setGender] = useState('');
+  const [photo, setPhoto] = useState('');
   const [saved, setSaved] = useState(false);
   const [diaryCount, setDiaryCount] = useState(0);
   const [firstDate, setFirstDate] = useState('');
   const [moodTrend, setMoodTrend] = useState<Record<string, number>>({});
   const [weeklyCount, setWeeklyCount] = useState(0);
+  const photoRef = useRef<HTMLInputElement>(null);
+
+  const handlePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Resize to 256px for storage
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const size = 256;
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d')!;
+        const min = Math.min(img.width, img.height);
+        const sx = (img.width - min) / 2, sy = (img.height - min) / 2;
+        ctx.drawImage(img, sx, sy, min, min, 0, 0, size, size);
+        setPhoto(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
   useEffect(() => {
     const p = getPetProfile();
@@ -49,6 +74,7 @@ export default function ProfilePage() {
     if (p.birthday) setBirthday(p.birthday);
     if (p.personality) setPersonality(p.personality);
     if (p.gender) setGender(p.gender);
+    if (p.photo) setPhoto(p.photo);
     getAllDiaries().then((d: DiaryEntry[]) => {
       setDiaryCount(d.length);
       setMoodTrend(getMoodTrend(d));
@@ -61,7 +87,7 @@ export default function ProfilePage() {
   }, []);
 
   const handleSave = () => {
-    savePetProfile({ name, type, birthday, personality, gender });
+    savePetProfile({ name, type, birthday, personality, gender, photo });
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
@@ -82,9 +108,24 @@ export default function ProfilePage() {
     <>
       <div className="app-header-alt" style={{ textAlign: 'center', paddingBottom: 60, borderRadius: '0 0 36px 36px' }}>
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <div className="avatar-ring animate-fade-in" style={{ marginBottom: 14 }}>
-            <div className="avatar-inner animate-breathe">{selected.emoji}</div>
+          <div className="avatar-ring animate-fade-in" style={{ marginBottom: 14, cursor: 'pointer' }}
+            onClick={() => photoRef.current?.click()}>
+            {photo ? (
+              <img src={photo} alt={name} style={{
+                width: 88, height: 88, borderRadius: '50%', objectFit: 'cover',
+              }} />
+            ) : (
+              <div className="avatar-inner animate-breathe">{selected.emoji}</div>
+            )}
+            <div style={{
+              position: 'absolute', bottom: 0, right: 0,
+              width: 28, height: 28, borderRadius: 10,
+              background: 'rgba(255,255,255,0.9)', backdropFilter: 'blur(4px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 14, boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            }}>📷</div>
           </div>
+          <input ref={photoRef} type="file" accept="image/*" onChange={handlePhoto} className="hidden" />
           <h1 style={{ fontSize: 22, fontWeight: 900 }} className="animate-fade-in-1">
             {name || '프로필 설정'}
           </h1>

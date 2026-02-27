@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getAllDiaries, deleteDiary, type DiaryEntry } from '@/lib/db';
+import { getAllDiaries, deleteDiary, getPetProfile, type DiaryEntry } from '@/lib/db';
 
 const moodMap: Record<string, string> = {
   '#해피': 'mood-happy', '#졸림': 'mood-sleepy', '#배고픔': 'mood-hungry',
@@ -58,6 +58,7 @@ export default function HomePage() {
 
   const streak = getStreakDays(diaries);
   const uniquePets = [...new Set(diaries.map(d => d.petName))].filter(Boolean);
+  const petProfile = getPetProfile();
 
   return (
     <>
@@ -80,7 +81,12 @@ export default function HomePage() {
                 {diaries.length > 0 ? `${diaries.length}개의 소중한 일기` : 'AI가 써주는 우리 아이 일기'}
               </p>
             </div>
-            {diaries.length > 0 ? (
+            {petProfile.photo ? (
+              <img src={petProfile.photo} alt={petProfile.name} style={{
+                width: 56, height: 56, borderRadius: '50%', objectFit: 'cover',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.1)', border: '3px solid white',
+              }} />
+            ) : diaries.length > 0 ? (
               <div className="avatar-stack">
                 {diaries.slice(0, 3).map((d) => (
                   <img key={d.id} src={d.imageData} alt={d.petName} />

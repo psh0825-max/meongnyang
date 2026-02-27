@@ -16,8 +16,9 @@ export interface PetProfile {
   name: string;
   type: string;
   birthday: string;
-  personality?: string; // 개구쟁이 | 도도한 | 애교쟁이 | 겁쟁이 | 느긋한
-  gender?: string; // 남아 | 여아
+  personality?: string;
+  gender?: string;
+  photo?: string; // base64 data URL
 }
 
 interface MeongNyangDB extends DBSchema {
@@ -62,10 +63,10 @@ export async function deleteDiary(id: string): Promise<void> {
 }
 
 export function getPetProfile(): PetProfile {
-  if (typeof window === 'undefined') return { name: '', type: '', birthday: '', personality: '', gender: '' };
+  if (typeof window === 'undefined') return { name: '', type: '', birthday: '', personality: '', gender: '', photo: '' };
   const raw = localStorage.getItem('petProfile');
   if (raw) return JSON.parse(raw);
-  return { name: '', type: '', birthday: '', personality: '', gender: '' };
+  return { name: '', type: '', birthday: '', personality: '', gender: '', photo: '' };
 }
 
 export function savePetProfile(profile: PetProfile): void {
