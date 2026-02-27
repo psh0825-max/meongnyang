@@ -161,6 +161,20 @@ export default function HomePage() {
                   </div>
 
                   <div style={{ padding: '18px 20px 20px' }}>
+                    {/* Health alert */}
+                    {entry.healthAlerts && entry.healthAlerts.length > 0 && (
+                      <div style={{
+                        marginBottom: 14, padding: '10px 14px', borderRadius: 14,
+                        background: 'linear-gradient(135deg, #FEF2F2, #FEE2E2)',
+                        border: '1px solid #FECACA',
+                      }}>
+                        <div className="flex items-center gap-1.5">
+                          <span style={{ fontSize: 13 }}>⚠️</span>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: '#DC2626' }}>건강 알림: {entry.healthAlerts[0]}</span>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="diary-content-box">
                       <p className="diary-text" style={{ whiteSpace: 'pre-wrap' }}>{entry.diary}</p>
                     </div>
