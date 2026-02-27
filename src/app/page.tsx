@@ -3,27 +3,33 @@
 import { useEffect, useState } from 'react';
 import { getAllDiaries, deleteDiary, type DiaryEntry } from '@/lib/db';
 
-const moodMap: Record<string, { className: string }> = {
-  '#해피': { className: 'mood-happy' },
-  '#졸림': { className: 'mood-sleepy' },
-  '#배고픔': { className: 'mood-hungry' },
-  '#신남': { className: 'mood-excited' },
-  '#편안': { className: 'mood-relaxed' },
+const moodMap: Record<string, string> = {
+  '#해피': 'mood-happy', '#졸림': 'mood-sleepy', '#배고픔': 'mood-hungry',
+  '#신남': 'mood-excited', '#편안': 'mood-relaxed',
 };
 
-function getMoodClass(tag: string) {
-  return moodMap[tag]?.className || 'mood-default';
-}
+const splashPhotos = [
+  'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=200&h=200&fit=crop',
+  'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=200&h=200&fit=crop',
+  'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=200&h=200&fit=crop',
+  'https://images.unsplash.com/photo-1495360010541-f48722b34f7d?w=200&h=200&fit=crop',
+];
 
 export default function HomePage() {
   const [diaries, setDiaries] = useState<DiaryEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
-    getAllDiaries().then((d) => {
-      setDiaries(d);
-      setLoading(false);
-    });
+    const seen = sessionStorage.getItem('splash_seen');
+    if (seen) setShowSplash(false);
+    else {
+      setTimeout(() => {
+        setShowSplash(false);
+        sessionStorage.setItem('splash_seen', '1');
+      }, 2200);
+    }
+    getAllDiaries().then((d) => { setDiaries(d); setLoading(false); });
   }, []);
 
   const handleDelete = async (id: string) => {
@@ -32,131 +38,96 @@ export default function HomePage() {
     setDiaries((prev) => prev.filter((d) => d.id !== id));
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <div className="empty-illustration animate-paw-bounce">
-          🐾
-        </div>
-        <p className="text-gray-400 font-medium">불러오는 중...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen">
-      {/* Header */}
-      <div className="gradient-header text-white px-6 pt-14 pb-12 relative">
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30">
-              <span className="text-2xl">🐾</span>
-            </div>
-            <div>
-              <h1 className="text-2xl font-black tracking-tight">멍냥로그</h1>
-              <p className="text-white/70 text-xs font-medium">우리 아이의 하루를 기록해요</p>
-            </div>
-          </div>
+      {/* Splash */}
+      <div className={`splash-overlay ${!showSplash ? 'hide' : ''}`}>
+        <div className="splash-photos">
+          {splashPhotos.map((src, i) => (
+            <img key={i} src={src} alt="" className="splash-photo" />
+          ))}
+        </div>
+        <div className="splash-logo text-center">
+          <h1 style={{ fontSize: 28, fontWeight: 900, color: '#2D2A26', letterSpacing: '-0.02em' }}>멍냥로그</h1>
+        </div>
+        <p className="splash-tagline" style={{ fontSize: 14, color: '#8A8580', marginTop: 8 }}>AI가 써주는 우리 아이 일기</p>
+      </div>
 
-          {/* Stats */}
+      {/* Header */}
+      <div className="app-header">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.02em' }}>멍냥로그</h1>
+            <p style={{ fontSize: 13, color: 'var(--text-light)', marginTop: 2 }}>
+              {diaries.length > 0 ? `${diaries.length}개의 일기` : 'AI가 써주는 우리 아이 일기'}
+            </p>
+          </div>
           {diaries.length > 0 && (
-            <div className="grid grid-cols-3 gap-3 mt-5">
-              {[
-                { num: diaries.length.toString(), label: '총 일기', icon: '📖' },
-                { num: new Set(diaries.map(d => d.petName)).size.toString(), label: '반려동물', icon: '🐶' },
-                { num: (() => { const today = new Date().toDateString(); return diaries.filter(d => new Date(d.createdAt).toDateString() === today).length.toString(); })(), label: '오늘', icon: '✨' },
-              ].map((s) => (
-                <div key={s.label} className="bg-white/15 backdrop-blur-sm rounded-2xl py-3 px-2 text-center border border-white/20">
-                  <div className="text-lg font-black">{s.num}</div>
-                  <div className="text-[10px] text-white/70 font-medium">{s.icon} {s.label}</div>
-                </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {diaries.slice(0, 3).map((d, i) => (
+                <img key={d.id} src={d.imageData} alt="" style={{
+                  width: 36, height: 36, borderRadius: 12, objectFit: 'cover',
+                  border: '2px solid white', marginLeft: i > 0 ? -8 : 0,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                }} />
               ))}
             </div>
           )}
         </div>
-
-        {/* Floating decorations */}
-        <span className="paw-decoration animate-float" style={{ top: '15%', right: '8%', fontSize: '20px', opacity: 0.15, animationDelay: '0s' }}>🐾</span>
-        <span className="paw-decoration animate-float" style={{ top: '60%', right: '15%', fontSize: '16px', opacity: 0.1, animationDelay: '1s' }}>✨</span>
-        <span className="paw-decoration animate-float" style={{ top: '40%', left: '5%', fontSize: '14px', opacity: 0.1, animationDelay: '2s' }}>🐾</span>
       </div>
 
       {/* Content */}
-      <div className="px-5 -mt-4 relative z-10 pb-6">
-        {diaries.length === 0 ? (
-          <div className="empty-state animate-fade-in">
-            <div className="empty-illustration animate-float">
-              😴
+      <div className="px-5 pb-24">
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="flex gap-2">
+              {[0, 1, 2].map(i => (
+                <div key={i} className="loading-dot" style={{ animationDelay: `${i * 0.2}s` }} />
+              ))}
             </div>
-            <h3 className="text-lg font-bold text-gray-700 mb-2">아직 일기가 없어요!</h3>
-            <p className="text-gray-400 text-sm mb-6 leading-relaxed">
-              반려동물 사진을 올리면<br/>AI가 귀여운 일기를 써줘요 🐾
+          </div>
+        ) : diaries.length === 0 ? (
+          <div className="text-center py-16 animate-fade-in">
+            <div className="empty-visual animate-breathe">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#C4C0BB" strokeWidth="1.5" strokeLinecap="round">
+                <path d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
+              </svg>
+            </div>
+            <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>아직 일기가 없어요</h3>
+            <p style={{ fontSize: 14, color: 'var(--text-light)', lineHeight: 1.6, marginBottom: 24 }}>
+              반려동물 사진을 올리면<br/>AI가 일기를 써드려요
             </p>
-            <a href="/new" className="btn-primary inline-flex !w-auto !px-8">
-              ✍️ 첫 일기 쓰러가기
+            <a href="/new" className="btn-primary" style={{ display: 'inline-flex', width: 'auto', padding: '14px 32px' }}>
+              첫 일기 쓰기
             </a>
           </div>
         ) : (
-          <div className="space-y-5">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginTop: 8 }}>
             {diaries.map((entry, i) => (
-              <div
-                key={entry.id}
-                className="card-diary animate-fade-in"
-                style={{ animationDelay: `${i * 0.1}s` }}
-              >
-                {/* Photo */}
-                <div className="photo-frame">
-                  <img
-                    src={entry.imageData}
-                    alt="반려동물 사진"
-                    className="w-full h-52 object-cover"
-                  />
-                  {/* Date ribbon */}
-                  <div className="absolute top-4 left-0">
-                    <div className="date-ribbon">
-                      📅 {new Date(entry.createdAt).toLocaleDateString('ko-KR', {
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </div>
+              <div key={entry.id} className="diary-card animate-fade-in" style={{ animationDelay: `${i * 0.08}s` }}>
+                <div className="photo-container">
+                  <img src={entry.imageData} alt="" />
+                  <div className="photo-date">
+                    {new Date(entry.createdAt).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', weekday: 'short' })}
                   </div>
+                  <div className="photo-pet">{entry.petName}</div>
                 </div>
-
-                {/* Content */}
-                <div className="p-5">
-                  {/* Pet name + delete */}
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className="badge badge-amber">
-                        🐾 {entry.petName}
-                      </span>
-                      <span className="text-xs text-gray-400">
-                        {new Date(entry.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+                <div style={{ padding: '16px 20px 20px' }}>
+                  <p className="diary-text" style={{ whiteSpace: 'pre-wrap' }}>{entry.diary}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {entry.moodTags.map((tag) => (
+                        <span key={tag} className={`mood-tag ${moodMap[tag] || ''}`}>{tag}</span>
+                      ))}
                     </div>
-                    <button
-                      onClick={() => handleDelete(entry.id)}
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-gray-300 hover:text-red-400 hover:bg-red-50 transition-all text-sm"
-                    >
+                    <button onClick={() => handleDelete(entry.id)}
+                      style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: 'none', border: 'none', color: '#D4D0CB', cursor: 'pointer', fontSize: 16, transition: 'color 0.2s' }}
+                      onMouseEnter={e => (e.currentTarget.style.color = '#E57373')}
+                      onMouseLeave={e => (e.currentTarget.style.color = '#D4D0CB')}>
                       ✕
                     </button>
                   </div>
-
-                  {/* Diary text */}
-                  <p className="text-gray-600 text-[14px] leading-[1.8] whitespace-pre-wrap">
-                    {entry.diary}
-                  </p>
-
-                  {/* Mood tags */}
-                  {entry.moodTags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-4">
-                      {entry.moodTags.map((tag) => (
-                        <span key={tag} className={`badge ${getMoodClass(tag)}`}>
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
             ))}
