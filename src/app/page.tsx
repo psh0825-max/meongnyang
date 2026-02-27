@@ -79,13 +79,10 @@ export default function HomePage() {
 
       {/* Splash */}
       <div className={`splash-overlay ${!showSplash ? 'hide' : ''}`}>
-        <div className="splash-photos">
-          {splashPhotos.map((src, i) => (
-            <img key={i} src={src} alt="" className="splash-photo" />
-          ))}
+        <div style={{ marginBottom: 32 }}>
+          <img src="/illust-hero2.png" alt="" className="animate-scale-in" style={{ width: 200, height: 200, borderRadius: 40, objectFit: 'cover', boxShadow: '0 12px 40px rgba(0,0,0,0.1)', border: '4px solid white' }} />
         </div>
         <div className="splash-logo text-center">
-          <img src="/illust-icon.png" alt="" style={{ width: 100, height: 100, borderRadius: 28, margin: '0 auto 16px', boxShadow: '0 8px 32px rgba(0,0,0,0.1)' }} />
           <h1 className="gradient-text" style={{ fontSize: 32, fontWeight: 900, letterSpacing: '-0.03em' }}>멍냥로그</h1>
         </div>
         <p className="splash-tagline" style={{ fontSize: 14, color: '#8A8580', marginTop: 10 }}>

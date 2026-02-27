@@ -92,7 +92,7 @@ export default function NewDiaryPage() {
             <div className="animate-fade-in">
               {/* Upload zone */}
               <div className="upload-zone" onClick={() => fileRef.current?.click()}>
-                <img src="/illust-hero.png" alt="" style={{ width: 120, height: 120, borderRadius: 24, margin: '0 auto 16px', objectFit: 'cover' }} />
+                <img src="/illust-hero2.png" alt="" style={{ width: 140, height: 140, borderRadius: 28, margin: '0 auto 16px', objectFit: 'cover' }} />
                 <p style={{ fontSize: 17, fontWeight: 800, color: 'var(--text)', marginBottom: 6 }}>사진을 올려주세요</p>
                 <p style={{ fontSize: 13, color: 'var(--text-light)', lineHeight: 1.5 }}>
                   우리 아이의 오늘 모습을 기록해요 ✨
